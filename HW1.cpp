@@ -4,7 +4,7 @@
  * Created by Zastupnevich Aleksey
  * Qt Creator 4.13.0 (Qt 5.15.0)
  * 2020-08-28
- * github -
+ * github - https://github.com/AlexZast/OOP_HomeWork
  */
 
 #include <iostream>

@@ -1,2 +1,2 @@
 # OOP.-HomeWork
-Home work for GitHub University
+Home work for GeekBrains University

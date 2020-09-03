@@ -62,7 +62,7 @@ public:
     Student(string name, string gender, int age, int weight, int y) :  Person(name, gender, age, weight), year(y){c++;}
     ~Student(){c--;}
     //метод для изменения года
-    void getYear(int NewYear){
+    void setYear(int NewYear){
         year = NewYear;
     }
     void plusYear(){

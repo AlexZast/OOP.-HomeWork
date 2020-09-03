@@ -37,13 +37,13 @@ public:
     ~Person(){}
 
     //Методы для изменения значений
-    void getName(string NewName){
+    void setName(string NewName){
         name = NewName;
     }
-    void getAge(int NewAge){
+    void setAge(int NewAge){
         age = NewAge;
     }
-    void getWeight(int NewWeight){
+    void setWeight(int NewWeight){
         weight = NewWeight;
     }
     // Методы для печати значений
@@ -72,7 +72,7 @@ public:
     void printS() const{
         cout << name<< " " << gender << " " << age << " " << weight << " " << year << endl;
     }
-    void printC() const{
+    static void printC() {
         cout << "Numbers of students - " << c << endl << endl;
     }
 };

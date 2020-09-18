@@ -92,6 +92,7 @@ protected:
 string company;
 int model;
 public:
+    Car(){}
     Car(string c, int m): company(c), model(m){
         cout << "Data of class Car - " << company << " model " << model << endl;
 }
@@ -99,16 +100,18 @@ public:
 
 };
 
-class PassengerCar : public Car{
+class PassengerCar : virtual public Car{
 public:
+    PassengerCar(){}
     PassengerCar(string n, int m):Car(n,m){
     cout << "Data of class PassCar - " << company << " model " << model << endl;
     }
     ~PassengerCar(){}
 };
 
-class Bus : public Car{
+class Bus : virtual public Car{
 public:
+    Bus(){}
     Bus(string n, int m):Car(n,m){
     cout << "Data of class Bus - " << company << " model " << model << endl;
     }
@@ -116,9 +119,9 @@ public:
 
 };
 
-class Minivan: public Bus, public PassengerCar{
+class Minivan: virtual public Bus, virtual public PassengerCar{
 public:
-    Minivan(string n, int m): Bus(n,m),PassengerCar(n,m){
+    Minivan(string n, int m) : Car(n, m)  {
     cout << "Data of class Minivan - " << Bus::company << " model " << PassengerCar::model << endl; // в данном случае система без указания пространства не понимает из какого класса брать model и company
     }
     ~Minivan(){}

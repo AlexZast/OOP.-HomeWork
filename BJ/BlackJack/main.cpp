@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -8,123 +10,133 @@ using namespace std;
 Игра БлэкДжек
 */
 
-enum Suit {clubs, diamonds, hearts, spades};
+enum Suit {clubs = 5, diamonds = 4, hearts =6, spades=3};
 enum Value  {two = 2, three, four, fife, six, seven, eight, nine, ten , J, Q, K, A};
+string PrintValue[15] = {"", "", " 2", " 3", " 4", " 5", " 6", " 7", "8", "9", "10", "J", "Q", " K", " A"};
+
 class Card{
 protected:
    Suit suit;
    Value value; // if value = 11 / J, 12 / Q, 13 / K, 14 /A
-   bool status;
+   bool status = false;
 
 public:
    Card(Suit s, Value v) : suit(s), value(v){}
-   Card(){
-       suit = clubs;
-       value = two;
-   }
    ~Card(){}
 
-   void setSuit(Suit s){
-       suit = s;
-   }
-   void setValue(Value v){
-       value = v;
-   }
-
-   string getSuit() const {
-       string a="";
-       switch (suit) {
-       case clubs: a =  "C "; break;
-       case diamonds: a = "D "; break;
-       case hearts: a = "H "; break;
-       case spades: a =  "S "; break;
-       default: a = "?";
-       }
-        return a;
-    }
-
    Value getValue() const{
+       //подсчет суммы карт в руке
        return value;
    }
-
-   bool Flip(bool s){
-       if (s) {return false;}
-       return true;
+   bool getStatus() {
+       return status;
    }
-//   Хотел добавить прорисовку карты но статик_чар выводит знаки вопросов в консоль :(
-//   void drawCard() const{
-//        if (value <=10){
-//            cout << value;}
-//        else {
-//            switch (value){
-//            case J: cout << "J";break;
-//            case Q: cout << "Q";break;
-//            case K: cout << "K";break;
-//            case A: cout << "A";break;
-//            }
-//        }
-//        switch (suit) {
-//        case clubs: cout << static_cast<char>(3) ;break;
-//        case diamonds: cout << static_cast<char>(4) ; break;
-//        case hearts: cout << static_cast<char>(5) ; break;
-//        case spades: cout << static_cast<char>(6) ; break;
-//        }
-//        }
+
+   void Flip(){
+       status? status = false : status = true;
+   }
+
+    void drawCard() const{
+        if (status == true){
+        cout << PrintValue[value];
+        cout << static_cast<char>(suit) << " |";
+        } else cout << " XX |";
+    }
 };
 
-class Desk{
+
+class Hand{
 protected:
-   Card arr[52];
+    vector<Card> hand;
 public:
-   Desk(){};
-   ~Desk(){}
+    void addCard(Card &card){                       // Переворачиваем карту для руки если она была скрыта
+        if (card.getStatus() != true) card.Flip();
+        hand.push_back(card);
+    }
 
-   void makeDeck(){
-       int n = 0;
-       for (int i=0; i< 4; i++){
-           for(int j = 0; j<13; j++){
-               n=j+i*13;
-               switch (i) {
-               case 0: arr[n].setSuit(clubs); break;
-               case 1: arr[n].setSuit(diamonds); break;
-               case 2: arr[n].setSuit(hearts); break;
-               case 3: arr[n].setSuit(spades); break;
-               };
-               switch (j) {
-               case 0: arr[n].setValue(two);break;
-               case 1: arr[n].setValue(three);break;
-               case 2: arr[n].setValue(four);break;
-               case 3: arr[n].setValue(fife);break;
-               case 4: arr[n].setValue(six);break;
-               case 5: arr[n].setValue(seven);break;
-               case 6: arr[n].setValue(eight);break;
-               case 7: arr[n].setValue(nine);break;
-               case 8: arr[n].setValue(ten);break;
-               case 9: arr[n].setValue(J);break;
-               case 10: arr[n].setValue(K);break;
-               case 11: arr[n].setValue(Q);break;
-               case 12: arr[n].setValue(A);break;
-               };
+    void clearHand(){                    // Странно что данная команда обнуляет только длинну и оставляет данные (если выйти за пределы вектора, доступ к данным сохранится)
+        hand.clear();
+    }
 
-
-            };
+    void drawHand() const{               // Прорисовка руки
+        int size = hand.size();
+        for (int i = 0; i < size; i++){
+            hand[i].drawCard();
         }
-   };
-
-    void printDeck() const{
-       for (int i = 0; i<52; i++){
-          if (i%13 == 0) {cout << endl;}
-           cout << arr[i].getSuit() << " " << arr[i].getValue() << " | ";
-       }
+    }
+    int getValue() const{
+        int value = 0;
+        int aceCounter = 0;
+        int size = hand.size();
+        for (int i=0; i < size; i++){
+            if (hand[i].getValue() < 11){
+                value += hand[i].getValue();
+            } else if (hand[i].getValue() < 14 && hand[i].getValue()>10) {
+                value += 10;
+            } else {
+                aceCounter++;
+                value += 11;
+            }
+        }
+        while (aceCounter>0 && value > 21){     // Если сумма очков больше чем надо и в руке есть тузы, каждый туз считать как 1 до тех пор, пока сумма не станет "удобной"
+            value -= 10;
+            aceCounter--;
+        }
+        return value;
     }
 
 };
+
 
 int main()
 {
-    Desk desk;
-    desk.makeDeck();
-    desk.printDeck();
+    //Desk desk;
+    //desk.makeDeck();
+    //desk.printDeck();
+
+    Card card(hearts, A);
+    card.drawCard();
+    Card card2(static_cast<Suit>(5), static_cast<Value>(14));
+    card2.Flip();
+    card2.drawCard();
+    cout << endl;
+    Hand hand1;
+    hand1.addCard(card2);
+    hand1.addCard(card);
+    //hand1.clearHand();
+    cout << hand1.getValue() << endl;
+    hand1.drawHand();
+
+
+
+    cout << "\t\tWelcome to Blackjack!\n\n";
+
+    int numPlayers = 0;
+    while (numPlayers < 1 || numPlayers > 7)
+    {
+        cout << "How many players? (1 - 7): ";
+        cin >> numPlayers;
+    }
+
+    vector<string> names;
+    string name;
+    for (int i = 0; i < numPlayers; ++i)
+    {
+        cout << "Enter player name: ";
+        cin >> name;
+        names.push_back(name);
+    }
+    cout << endl;
+
+//    // игровой цикл - закоммитил т.к. нет пока класса Game
+//    Game aGame(names);
+//    char again = 'y';
+//    while (again != 'n' && again != 'N')
+//    {
+//        aGame.Play();
+//        cout << "\nDo you want to play again? (Y/N): ";
+//        cin >> again;
+//    }
 
     return 0;
 }

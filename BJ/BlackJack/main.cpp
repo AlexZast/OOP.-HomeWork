@@ -11,8 +11,9 @@ using namespace std;
 */
 
 enum Suit {clubs = 5, diamonds = 4, hearts =6, spades=3};
-enum Value  {two = 2, three, four, fife, six, seven, eight, nine, ten , J, Q, K, A};
-string PrintValue[15] = {"", "", " 2", " 3", " 4", " 5", " 6", " 7", "8", "9", "10", "J", "Q", " K", " A"};
+enum Value  {cls = 0, two = 2, three, four, fife, six, seven, eight, nine, ten , J, Q, K, A}; // если тут испльзовать enum class то мы получим запрет неявного приведения типа и придется переоформлять все методы
+
+static string PrintValue[15] = {"", "", " 2", " 3", " 4", " 5", " 6", " 7", "8", "9", "10", "J", "Q", " K", " A"}; // данное поле нельзя статично реализовать в class Card выводит ошибку error: non-const static data member must be initialized out of line. А если реализовывать не статично то для каждой карты будут создаваться клоны данных данных
 
 class Card{
 protected:
@@ -20,20 +21,23 @@ protected:
    Value value; // if value = 11 / J, 12 / Q, 13 / K, 14 /A
    bool status = false;
 
+
 public:
    Card(Suit s, Value v) : suit(s), value(v){}
    ~Card(){}
 
    Value getValue() const{
-       //подсчет суммы карт в руке
-       return value;
+       // Передача карты в фукнцию подсчета в случае если карта открыта - 81-строка getValue, иначе, если закрыта передать 0
+       Value  a = cls ;
+       if (status) return value;
+       return a;
    }
-   bool getStatus() {
+   bool getStatus() const {
        return status;
    }
 
    void Flip(){
-       status? status = false : status = true;
+       status = !(status);
    }
 
     void drawCard() const{
@@ -47,31 +51,41 @@ public:
 
 class Hand{
 protected:
-    vector<Card> hand;
+    vector<Card*> hand;
 public:
+
+    Hand() { }
+    virtual ~Hand() { }
+
     void addCard(Card &card){                       // Переворачиваем карту для руки если она была скрыта
         if (card.getStatus() != true) card.Flip();
-        hand.push_back(card);
+        hand.push_back(&card);
     }
 
-    void clearHand(){                    // Странно что данная команда обнуляет только длинну и оставляет данные (если выйти за пределы вектора, доступ к данным сохранится)
-        hand.clear();
-    }
-
-    void drawHand() const{               // Прорисовка руки
-        int size = hand.size();
-        for (int i = 0; i < size; i++){
-            hand[i].drawCard();
+    void clearHand(){
+        vector<Card*>::iterator iter = hand.begin();
+            for (iter = hand.begin(); iter != hand.end(); ++iter)
+            {
+                delete *iter;
+                *iter = 0;
         }
     }
-    int getValue() const{
+
+    void drawHand() const {               // Прорисовка руки
+        int size = hand.size();
+        for (int i = 0; i < size; i++){
+            hand[i]->drawCard();
+        }
+    }
+
+    int getValue() const {
         int value = 0;
         int aceCounter = 0;
         int size = hand.size();
         for (int i=0; i < size; i++){
-            if (hand[i].getValue() < 11){
-                value += hand[i].getValue();
-            } else if (hand[i].getValue() < 14 && hand[i].getValue()>10) {
+            if (hand[i]->getValue() < 11){
+                value += hand[i]->getValue();
+            } else if (hand[i]->getValue() < 14 && hand[i]->getValue()>10) {
                 value += 10;
             } else {
                 aceCounter++;
@@ -88,12 +102,38 @@ public:
 };
 
 
+/* ВЫполнени ДЗ по BJ к лекции №5
+ * Согласно иерархии классов, которая представлена в методичке к уроку 3, от класса Hand наследует класс GenericPlayer,
+ * который обобщенно представляет игрока, ведь у нас будет два типа игроков - человек и компьютер.
+ * Создать класс GenericPlayer, в который добавить поле name - имя игрока. Также добавить 3 метода:
+ * IsHitting() - чисто виртуальная функция, возвращает информацию, нужна ли игроку еще одна карта.
+ * IsBoosted() - возвращает bool значение, есть ли у игрока перебор
+ * Bust() - выводит на экран имя игрока и объявляет, что у него перебор.
+ */
+
+class GenericPlayer : virtual Hand{
+protected:
+    string name;
+public:
+    GenericPlayer(string n): name(n) { }
+    virtual ~GenericPlayer() { }
+
+    virtual bool IsHitting(/*условие для функции(граничные условия для компьютера)*/) {
+        if (/*граничное условие getValue < 15 -> true иначе false*/ int i = 0 == 0) return true;
+        return false;
+    }
+    bool IsBoosted() {
+        if (getValue() > 21) return true;
+        return false;
+    }
+    void Bust(string n, bool s) const {
+        if(s) cout << "Player "<< n << " BUST!" << endl;
+    }
+};
+
 int main()
 {
-    //Desk desk;
-    //desk.makeDeck();
-    //desk.printDeck();
-
+    // Проверка работы в main
     Card card(hearts, A);
     card.drawCard();
     Card card2(static_cast<Suit>(5), static_cast<Value>(14));

@@ -68,6 +68,7 @@ public:
             {
                 delete *iter;
                 *iter = 0;
+                hand.clear();
         }
     }
 

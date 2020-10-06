@@ -4,4 +4,4 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-        D:\GeekBrainsEducation\OOP_HomeWork\BJ\BlackJack\main.cpp
+        main.cpp

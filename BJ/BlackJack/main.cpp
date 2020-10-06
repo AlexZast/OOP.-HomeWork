@@ -1,10 +1,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <ctime>
+#include <iomanip>
 
 using namespace std;
-
-
 
 /*
 Игра БлэкДжек
@@ -18,7 +19,7 @@ class Card{
 protected:
    Suit suit;
    Value value; // if value = 11 / J, 12 / Q, 13 / K, 14 /A
-   bool status = false;
+   bool status = true;
 
 public:
    Card(Suit s, Value v) : suit(s), value(v){}
@@ -38,9 +39,7 @@ public:
        status = !(status);
    }
 
-    void drawCard() const{
-    }
-    friend ostream& operator<< (ostream &out, const Card& card);
+   friend ostream& operator<< (ostream &out, const Card& card);
 };
 
 class Hand{
@@ -50,9 +49,8 @@ public:
     Hand() { }
     virtual ~Hand() { }
 
-    void addCard(Card &card){                       // Переворачиваем карту для руки если она была скрыта
-        if (card.getStatus() != true) card.Flip();
-        hand.push_back(&card);
+    void addCard(Card* card){                       // Переворачиваем карту для руки если она была скрыта
+         hand.push_back(card);
     }
 
     void clearHand(){
@@ -61,15 +59,19 @@ public:
             {
                 delete *iter;
                 *iter = 0;
-                hand.clear();
-        }
+             }
+            hand.clear();
     }
 
     void drawHand() const {               // Прорисовка руки
         int size = hand.size();
-        for (int i = 0; i < size; i++){
-            hand[i]->drawCard();
+        for (int i = 0; i < size; ++i){
+           // if (i%13 == 0) cout << endl;
+            cout << setw(2)<< *hand[i];
         }
+    }
+    Card* shovBack(){
+        return hand.back();
     }
 
     int getValue() const {
@@ -107,19 +109,11 @@ public:
         if (getValue() > 21) return true;
         return false;
     }
-    void Bust(string n, bool s) const {
-        if(s) cout << "Player "<< n << " BUST!" << endl;
+    void Bust(bool s) const {
+        if(s) cout << "Player "<< m_Name << " BUST!" << endl;
     }
     friend ostream& operator<< (ostream &out, const GenericPlayer& player);
 };
-
-// Выполнение ДЗ по лекции №6
-/* Задание №3 Реализовать класс Player, который наследует от класса GenericPlayer.
- * У этого класса будет 4 метода:
- * virtual bool IsHitting() const - реализация чисто виртуальной функции базового класса. Метод спрашивает у пользователя, нужна ли ему еще одна карта и возвращает ответ пользователя в виде true или false.
- * void Win() const - выводит на экран имя игрока и сообщение, что он выиграл.
- * void Lose() const - выводит на экран имя игрока и сообщение, что он проиграл.
- * void Push() const - выводит на экран имя игрока и сообщение, что он сыграл вничью*/
 
 class Player : public GenericPlayer{
 //protected:
@@ -130,7 +124,7 @@ public:
 
 
     virtual bool IsHitting() const {
-        cout << m_Name << ", do you want a hit? (Y/N): ";
+        cout << m_Name << ", do you want a hit? (Y/N): " << endl;
             char response;
             cin >> response;
             return (response == 'y' || response == 'Y');
@@ -147,32 +141,19 @@ public:
 
 };
 
-/* Задание №4
- * Реализовать класс House, который представляет дилера.
- * Этот класс наследует от класса GenericPlayer. У него есть 2 метода:
- * virtual bool IsHitting() const - метод указывает, нужна ли дилеру еще одна карта. Если у дилера не больше 16 очков, то он берет еще одну карту.
- * void FlipFirstCard() - метод переворачивает первую карту дилера.*/
-
 class House : public GenericPlayer{
 protected:
 public:
+    House() :GenericPlayer("House"){}
+    virtual ~House(){}
     virtual bool IsHitting() const {
         return (this->getValue() <= 16);     // Если меньше 16 то вернуть true, иначе false
 
     }
     void FlipFirstCard(){
-       if (!hand[0]->getStatus()){      // Если карта не перевернута, то перевернуть
-           hand[0]->Flip();
-       }
+         hand[0]->Flip();
     }
 };
-
-
-/* Задание №5 Написать перегрузку оператора вывода для класса Card.
- * Если карта перевернута рубашкой вверх (мы ее не видим), вывести ХХ, если мы ее видим, вывести масть и номинал карты.
- * Также для класса GenericPlayer написать перегрузку оператора вывода,
- * который должен отображать имя игрока и его карты, а также общую сумму очков его карт.
-*/
 
 ostream& operator<< (ostream &out, const Card& card){
     if (card.getStatus() == true){
@@ -195,25 +176,131 @@ ostream& operator<< (ostream &out, const GenericPlayer& player){
     return out;
 }
 
+/* Лекция 7 - Задание №3 Создать класс Deck, который наследует от класса Hand и представляет собой колоду карт.
+ * Класс Deck имеет 4 метода:
+ * vold Populate() - Создает стандартную колоду из 52 карт, вызывается из конструктора.
+ * void Shuffle() - Метод, который тасует карты, можно использовать функцию из алгоритмов STL random_shuffle
+ * vold Deal (Hand& aHand) - метод, который раздает в руку одну карту
+ * void AddltionalCards (GenericPlayer& aGenerlcPlayer) - раздает игроку дополнительные карты до тех пор, пока он может и хочет их получать*/
+
+class Deck : virtual public Hand{
+protected:
+public:
+    Deck(){}
+    virtual ~Deck() {}
+
+    void Populate(){
+        for (int i = 0 ; i < 4; ++i){
+            for (int j=0; j<13; ++j){
+                addCard(new Card(static_cast<Suit>(i+3), static_cast<Value>(j+2)));
+//                int n = j + i*13;
+//                hand[n]->Flip();
+//                cout<< setw(2) << *hand[n];
+            }
+           // cout << endl;
+        }
+    }
+    void Shuffle() {
+        srand(time(0));  // Для случайной рандомизации, иначе при повторной генерации положение карт всегда одно и то же
+        random_shuffle(hand.begin(), hand.end());
+    }
+    void Deal(Hand& aHand){
+        if(hand.size()>0){              // Тут можно поставить условие что если карт меньше 20 то следующая партия с новой колоды а не опускать карты до 0
+            aHand.addCard(hand.back());
+            hand.pop_back();
+        } else cout << "Nothing to deal.";
+    }
+    void AdditionalCard(GenericPlayer& aGenericPlayer){
+        if(aGenericPlayer.IsHitting()&& !aGenericPlayer.IsBoosted()){
+            Deal(aGenericPlayer);
+        }
+    }
+};
+
+class Game {
+private:
+    Deck deck;
+    House diller;
+    vector<Player> players;
+public:
+    Game(vector<string> names) {
+        int n = names.size();
+
+        for (int i = 0; i < n ; ++i){
+            //Player *a = new Player(names[i]);
+            players.push_back(Player(names[i]));
+        }
+
+        deck.Populate();
+        deck.Shuffle();
+    }
+    virtual ~Game(){}
+
+    void Play(){
+        /*Также класс имеет один метод play().
+         * В этом методе раздаются каждому игроку по две стартовые карты,
+         * а первая карта дилера прячется. Далее выводится на экран информация о картах каждого игра, в т.ч. и для дилера.
+         * Затем раздаются игрокам дополнительные карты. Потом показывается первая карта дилера и дилер набирает карты, если ему надо.
+         *  После этого выводится сообщение, кто победил, а кто проиграл. В конце руки всех игроков очищаются.*/
+
+        //Раздача карт
+        int n = players.size();
+        for(int i=0; i<n; ++i){
+            deck.Deal(players[i]);
+            deck.Deal(players[i]);
+        }
+        deck.Deal(diller);
+        deck.Deal(diller);
+        diller.FlipFirstCard();
+
+        cout << diller << endl;
+
+          for(int i=0; i<n; ++i){
+              cout << players[i];
+          }
+
+            // Ход игроков
+            for(int i=0; i<n; ++i){
+                while(!players[i].IsBoosted() && players[i].IsHitting()){
+                    deck.Deal(players[i]);
+                    cout << "You take: " << *players[i].shovBack() << endl;
+                    cout << players[i];
+                    if (!players[i].IsBoosted());
+                    else players[i].Bust(players[i].IsBoosted());
+                }
+            }
+
+            // Ход диллера
+            diller.FlipFirstCard();
+            while(diller.IsHitting()){
+                deck.Deal(diller);
+            }
+            cout << diller << endl;
+            // Игроки у которых больше очков чем у диллера или у которых нет перебора когда у диллира есть выигрывают
+            for(int i=0; i<n; ++i){
+                if((players[i].getValue()>diller.getValue() && !players[i].IsBoosted()) || (!players[i].IsBoosted() && diller.IsBoosted())){
+                    players[i].Win();
+            // Если нет перебора и очки одинаковые то ничья
+                } else if (players[i].getValue()==diller.getValue() && !players[i].IsBoosted()){
+                    players[i].Push();
+                } else players[i].Lose();
+            }
+            // Очистка
+            for(int i=0; i<n; ++i){
+                players[i].clearHand();
+            }
+            diller.clearHand();
+            //Пересоздание коллоды для новой игры
+            deck.Populate();
+            deck.Shuffle();
+    }
+};
 
 int main()
 {
-    // Проверка работы в main
-    Card card(hearts, A);
-    cout << card;
-    Card card2(static_cast<Suit>(5), static_cast<Value>(14));
-    cout << card2;
-    card2.Flip();
-    cout << card2;
-    cout << endl;
-    Hand hand1;
-    hand1.addCard(card2);
-    hand1.addCard(card);
-    //hand1.clearHand();
-    cout << hand1.getValue() << endl;
-    Player pl("Alex");
-    pl.addCard(card2); pl.addCard(card);
-    cout << pl;
+    /* Задание №5
+     * Написать функцию main() к игре Блекджек. В этой функции вводятся имена игроков.
+     * Создается объект класса Game и запускается игровой процесс. Предусмотреть возможность повторной игры.*/
 
     cout << "\t\tWelcome to Blackjack!\n\n";
 
@@ -234,15 +321,13 @@ int main()
     }
     cout << endl;
 
-//    // игровой цикл - закоммитил т.к. нет пока класса Game
-//    Game aGame(names);
-//    char again = 'y';
-//    while (again != 'n' && again != 'N')
-//    {
-//        aGame.Play();
-//        cout << "\nDo you want to play again? (Y/N): ";
-//        cin >> again;
-//    }
-
+   Game aGame(names);
+   char again = 'y';
+   while (again != 'n' && again != 'N')
+    {
+       aGame.Play();
+        cout << "\nDo you want to play again? (Y/N): ";
+        cin >> again;
+    }
     return 0;
 }

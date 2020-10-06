@@ -68,8 +68,10 @@ public:
         for (int i = 0; i < size; ++i){
            // if (i%13 == 0) cout << endl;
             cout << setw(2)<< *hand[i];
-
         }
+    }
+    Card* shovBack(){
+        return hand.back();
     }
 
     int getValue() const {
@@ -261,21 +263,24 @@ public:
             for(int i=0; i<n; ++i){
                 while(!players[i].IsBoosted() && players[i].IsHitting()){
                     deck.Deal(players[i]);
+                    cout << "You take: " << *players[i].shovBack() << endl;
                     cout << players[i];
                     if (!players[i].IsBoosted());
                     else players[i].Bust(players[i].IsBoosted());
                 }
             }
+
             // Ход диллера
             diller.FlipFirstCard();
             while(diller.IsHitting()){
                 deck.Deal(diller);
             }
             cout << diller << endl;
-
+            // Игроки у которых больше очков чем у диллера или у которых нет перебора когда у диллира есть выигрывают
             for(int i=0; i<n; ++i){
                 if((players[i].getValue()>diller.getValue() && !players[i].IsBoosted()) || (!players[i].IsBoosted() && diller.IsBoosted())){
                     players[i].Win();
+            // Если нет перебора и очки одинаковые то ничья
                 } else if (players[i].getValue()==diller.getValue() && !players[i].IsBoosted()){
                     players[i].Push();
                 } else players[i].Lose();
@@ -285,6 +290,7 @@ public:
                 players[i].clearHand();
             }
             diller.clearHand();
+            //Пересоздание коллоды для новой игры
             deck.Populate();
             deck.Shuffle();
     }
